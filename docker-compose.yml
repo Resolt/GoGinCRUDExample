@@ -6,8 +6,24 @@ services:
     image: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: ggce
-      POSTGRES_USER: ggce
-      POSTGRES_DB: ggce
-    ports:
-      - 5432:5432
+      POSTGRES_PASSWORD: "ggce"
+      POSTGRES_USER: "ggce"
+      POSTGRES_DB: "ggce"
+    # ports:
+    #   - 5432:5432
+  # ggce:
+  #   container_name: ggce-api
+  #   build: .
+  #   restart: unless-stopped
+  #   environment:
+  #     DB_HOST: "database"
+  #     DB_NAME: "ggce"
+  #     DB_USER: "ggce"
+  #     DB_PASS: "ggce"
+  #     DB_PORT: "5432"
+  #     GIN_MODE: "release"
+  #     PORT: "8080"
+  #   ports:
+  #     - 8080:8080
+  #   links:
+  #     - "db:database"
