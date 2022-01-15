@@ -43,5 +43,6 @@ type Post struct {
 	gorm.Model
 	UserID uint
 	User   User
+	Title  string
 	Text   string
 }
