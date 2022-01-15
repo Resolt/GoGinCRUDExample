@@ -1,0 +1,13 @@
+version: '3.1'
+
+services:
+  db:
+    container_name: ggce-db
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ggce
+      POSTGRES_USER: ggce
+      POSTGRES_DB: ggce
+    ports:
+      - 5432:5432
