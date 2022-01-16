@@ -41,8 +41,8 @@ type User struct {
 //Post model
 type Post struct {
 	gorm.Model
-	UserID uint
 	User   User
-	Title  string `gorm:"unique"`
+	UserID uint   `gorm:"uniqueIndex:post_idx"`
+	Title  string `gorm:"uniqueIndex:post_idx"`
 	Text   string
 }
