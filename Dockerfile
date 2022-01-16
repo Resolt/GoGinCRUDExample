@@ -3,7 +3,7 @@ ADD ./ /build
 WORKDIR /build
 RUN go build -o ggce
 
-FROM gcr.io/distroless/base-debian11
+FROM gcr.io/distroless/base
 WORKDIR /ggce
 COPY --from=build /build/ggce .
 CMD ["./ggce"]
