@@ -43,6 +43,6 @@ type Post struct {
 	gorm.Model
 	UserID uint
 	User   User
-	Title  string
+	Title  string `gorm:"unique"`
 	Text   string
 }

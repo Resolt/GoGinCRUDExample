@@ -16,6 +16,9 @@ func (s *server) setupRoutes() {
 	s.gin.GET("/users", s.handleUsersGet())
 	s.gin.POST("/users/:name", s.handleUserCreate())
 	s.gin.DELETE("/users/:name", s.handleUserDelete())
+	s.gin.GET("/users/:name/posts", s.handleUserPostsGet())
+	s.gin.POST("/users/:name/posts/:title", s.handleUserPostCreate())
+	s.gin.DELETE("/users/:name/posts/:title", s.handleUserPostDelete())
 }
 
 func (s *server) handleUsersGet() gin.HandlerFunc {
@@ -82,6 +85,122 @@ func (s *server) handleUserDelete() gin.HandlerFunc {
 		}
 		result = s.db.Delete(&user)
 		if err := result.Error; err != nil {
+			logError(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"detail": "OK"})
+		return
+	}
+}
+
+func (s *server) handleUserPostsGet() gin.HandlerFunc {
+	type postResponse struct {
+		Title string `json:"title" binding:"required"`
+		Text  string `json:"text" binding:"required"`
+	}
+	type response struct {
+		Posts []postResponse
+	}
+	return func(c *gin.Context) {
+		name := c.Param("name")
+		usr := User{}
+		result := s.db.Where("name = ?", name).Find(&usr)
+		if result.RowsAffected == 0 {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"detail": "user name not found",
+			})
+			return
+		}
+		posts := []Post{}
+		result = s.db.Where("user_id = ?", usr.ID).Find(&posts)
+		err := result.Error
+		if err != nil && result.RowsAffected != 0 {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		resp := response{}
+		for _, post := range posts {
+			resp.Posts = append(resp.Posts, postResponse{
+				Title: post.Title, Text: post.Text,
+			})
+		}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+}
+
+func (s *server) handleUserPostCreate() gin.HandlerFunc {
+	type request struct {
+		Text string `json:"text" binding:"required"`
+	}
+	return func(c *gin.Context) {
+		req := request{}
+		err := c.ShouldBindJSON(&req)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
+				"detail": "post must have fields: title, text",
+			})
+			return
+		}
+		name := c.Param("name")
+		usr := User{}
+		result := s.db.Where("name = ?", name).Find(&usr)
+		if result.RowsAffected == 0 {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"detail": "user not found",
+			})
+			return
+		}
+		title := c.Param("title")
+		post := Post{}
+		result = s.db.Where("user_id = ? and title = ?", usr.ID, title).Find(&post)
+		if result.RowsAffected > 0 {
+			c.AbortWithStatusJSON(http.StatusConflict, gin.H{
+				"detail": "user already has post with this title",
+			})
+			return
+		}
+		post.UserID = usr.ID
+		post.User = usr
+		post.Title = title
+		post.Text = req.Text
+		err = s.db.Create(&post).Error
+		if err != nil {
+			logError(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"detail": "OK"})
+		return
+	}
+}
+
+func (s *server) handleUserPostDelete() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		name := c.Param("name")
+		usr := User{}
+		result := s.db.Where("name = ?", name).Find(&usr)
+		if result.RowsAffected == 0 {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"detail": "user not found",
+			})
+			return
+		}
+		title := c.Param("title")
+		post := Post{}
+		result = s.db.Where("user_id = ? and title = ?", usr.ID, title).Find(&post)
+		if result.RowsAffected == 0 {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"detail": "post not found"})
+			return
+		} else if result.Error != nil {
+			logError(result.Error)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		result = s.db.Delete(&post)
+		err := result.Error
+		if err != nil {
 			logError(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
