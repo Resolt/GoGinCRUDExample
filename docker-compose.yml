@@ -9,9 +9,9 @@ services:
       POSTGRES_PASSWORD: "ggce"
       POSTGRES_USER: "ggce"
       POSTGRES_DB: "ggce"
-    # ports:
-    #   - 5432:5432
-  # ggce:
+    ports:
+      - 5432:5432
+  # api:
   #   container_name: ggce-api
   #   build: .
   #   restart: unless-stopped
