@@ -38,6 +38,19 @@ type User struct {
 	Name string `gorm:"unique"`
 }
 
+func (u *User) BeforeDelete(tx *gorm.DB) (err error) {
+	posts := []Post{}
+	result := tx.Where("user_id = ?", u.ID).Find(&posts)
+	if result.Error != nil && result.RowsAffected != 0 {
+		err = result.Error
+		return
+	}
+	if result.RowsAffected > 0 {
+		tx.Delete(&posts)
+	}
+	return
+}
+
 //Post model
 type Post struct {
 	gorm.Model
