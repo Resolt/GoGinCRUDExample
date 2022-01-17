@@ -12,6 +12,14 @@ type server struct {
 	gin *gin.Engine
 }
 
+func createServer(db *gorm.DB) (s *server) {
+	s = &server{
+		db:  db,
+		gin: gin.Default(),
+	}
+	return
+}
+
 //Setup the routes of the API
 func (s *server) setupRoutes() {
 	s.gin.GET("/users", s.handleUsersGet())

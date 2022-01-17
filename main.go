@@ -1,9 +1,5 @@
 package main
 
-import (
-	"github.com/gin-gonic/gin"
-)
-
 func main() {
 	var err error
 
@@ -20,10 +16,7 @@ func main() {
 	}
 
 	//create server
-	srv := server{
-		db:  db,
-		gin: gin.Default(),
-	}
+	srv := createServer(db)
 
 	//setup server routes
 	srv.setupRoutes()
