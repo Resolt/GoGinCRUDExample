@@ -5,15 +5,33 @@ import (
 )
 
 func main() {
+	var err error
+
+	//create db connection
+	db, err := getDB()
+	if err != nil {
+		logFatal(err)
+	}
+
+	//migrate db
+	err = migrate(db)
+	if err != nil {
+		logFatal(err)
+	}
+
+	//create server
 	srv := server{
-		db:  getDBConn(),
+		db:  db,
 		gin: gin.Default(),
 	}
-	if err := migrate(srv.db); err != nil {
-		logFatal(err)
-	}
+
+	//setup server routes
 	srv.setupRoutes()
-	if err := srv.gin.Run(); err != nil {
+
+	//run server and log error if something goes wrong
+	err = srv.gin.Run()
+	if err != nil {
 		logFatal(err)
 	}
+	return
 }
