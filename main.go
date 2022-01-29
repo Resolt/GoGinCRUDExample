@@ -15,10 +15,8 @@ func main() {
 		logFatal(err)
 	}
 
-	//create server
+	//create server and setup routes
 	srv := createServer(db)
-
-	//setup server routes
 	srv.setupRoutes()
 
 	//run server and log error if something goes wrong
