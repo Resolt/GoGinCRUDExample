@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -66,7 +67,7 @@ func (s *server) handleUserCreate() gin.HandlerFunc {
 		if result.RowsAffected > 0 {
 			c.JSON(
 				http.StatusConflict,
-				gin.H{"detail": "user with name already exists"},
+				gin.H{"detail": fmt.Sprintf("user already exists: %s", name)},
 			)
 			return
 		}
@@ -89,9 +90,9 @@ func (s *server) handleUserDelete() gin.HandlerFunc {
 		user := User{}
 		result := s.db.Where("name = ?", name).Find(&user)
 		if result.RowsAffected == 0 {
-			c.JSON(
+			c.AbortWithStatusJSON(
 				http.StatusNotFound,
-				gin.H{"detail": "user with name does not exists"},
+				gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
 			)
 			return
 		}
@@ -120,9 +121,10 @@ func (s *server) handleUserPostsGet() gin.HandlerFunc {
 		usr := User{}
 		result := s.db.Where("name = ?", name).Find(&usr)
 		if result.RowsAffected == 0 {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-				"detail": "user name not found",
-			})
+			c.AbortWithStatusJSON(
+				http.StatusNotFound,
+				gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
+			)
 			return
 		}
 		posts := []Post{}
@@ -161,9 +163,10 @@ func (s *server) handleUserPostCreate() gin.HandlerFunc {
 		usr := User{}
 		result := s.db.Where("name = ?", name).Find(&usr)
 		if result.RowsAffected == 0 {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-				"detail": "user not found",
-			})
+			c.AbortWithStatusJSON(
+				http.StatusNotFound,
+				gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
+			)
 			return
 		}
 		title := c.Param("title")
@@ -197,9 +200,10 @@ func (s *server) handleUserPostDelete() gin.HandlerFunc {
 		usr := User{}
 		result := s.db.Where("name = ?", name).Find(&usr)
 		if result.RowsAffected == 0 {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-				"detail": "user not found",
-			})
+			c.AbortWithStatusJSON(
+				http.StatusNotFound,
+				gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
+			)
 			return
 		}
 		title := c.Param("title")
