@@ -114,7 +114,7 @@ func (s *server) handleUserPostsGet() gin.HandlerFunc {
 		Text  string `json:"text" binding:"required"`
 	}
 	type response struct {
-		Posts []postResponse
+		Posts []postResponse `json:"posts" binding:"required"`
 	}
 	return func(c *gin.Context) {
 		name := c.Param("name")
