@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -41,9 +42,21 @@ func (s *server) handleUsersGet() gin.HandlerFunc {
 		users := []User{}
 		err := s.db.Find(&users).Error
 		if err != nil {
-			logError(err)
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
+			if strings.Contains(err.Error(), "broken pipe") {
+				db, err := getDB()
+				if err != nil {
+					logError(err)
+					c.AbortWithStatus(http.StatusInternalServerError)
+					return
+				}
+				s.db = db
+				c.Handler()(c)
+				return
+			} else {
+				logError(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 		}
 		userNames := []string{}
 		for _, user := range users {
@@ -72,11 +85,23 @@ func (s *server) handleUserCreate() gin.HandlerFunc {
 			return
 		}
 		user.Name = name
-		result = s.db.Create(&user)
-		if err := result.Error; err != nil {
-			logError(err)
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
+		err := s.db.Create(&user).Error
+		if err != nil {
+			if strings.Contains(err.Error(), "broken pipe") {
+				db, err := getDB()
+				if err != nil {
+					logError(err)
+					c.AbortWithStatus(http.StatusInternalServerError)
+					return
+				}
+				s.db = db
+				c.Handler()(c)
+				return
+			} else {
+				logError(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 		}
 		c.JSON(http.StatusOK, response{UserID: user.ID})
 		return
@@ -96,11 +121,23 @@ func (s *server) handleUserDelete() gin.HandlerFunc {
 			)
 			return
 		}
-		result = s.db.Delete(&user)
-		if err := result.Error; err != nil {
-			logError(err)
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
+		err := s.db.Delete(&user).Error
+		if err != nil {
+			if strings.Contains(err.Error(), "broken pipe") {
+				db, err := getDB()
+				if err != nil {
+					logError(err)
+					c.AbortWithStatus(http.StatusInternalServerError)
+					return
+				}
+				s.db = db
+				c.Handler()(c)
+				return
+			} else {
+				logError(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 		}
 		c.JSON(http.StatusOK, gin.H{"detail": "OK"})
 		return
