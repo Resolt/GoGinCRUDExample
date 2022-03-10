@@ -62,10 +62,10 @@ func (s *server) handleUserCreate() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		name := c.Param("name")
-		user := User{}
-		result := s.db.Where("name = ?", name).Find(&user)
+		user := User{Name: name}
+		result := s.db.Create(&user)
 		if err := result.Error; err != nil {
-			if result.RowsAffected > 0 {
+			if errIsDbUniqueViolation(err) {
 				c.JSON(
 					http.StatusConflict,
 					gin.H{"detail": fmt.Sprintf("user already exists: %s", name)},
@@ -76,13 +76,6 @@ func (s *server) handleUserCreate() gin.HandlerFunc {
 				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
-		}
-		user.Name = name
-		result = s.db.Create(&user)
-		if err := result.Error; err != nil {
-			logError(err)
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
 		}
 		c.JSON(http.StatusOK, response{UserID: user.ID})
 		return

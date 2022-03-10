@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -71,4 +72,23 @@ type Post struct {
 	Text      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+//****
+//Postgres errors
+//****
+
+const (
+	dbErrUniqueViolation = pq.ErrorCode("23505")
+)
+
+func isErrorCode(err error, errcode pq.ErrorCode) bool {
+	if pgerr, ok := err.(*pq.Error); ok {
+		return pgerr.Code == errcode
+	}
+	return false
+}
+
+func errIsDbUniqueViolation(err error) bool {
+	return isErrorCode(err, dbErrUniqueViolation)
 }
