@@ -1,13 +1,15 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/lib/pq"
+	"github.com/jackc/pgconn"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 //Get Gorm DB connection
@@ -18,7 +20,11 @@ func getDB() (db *gorm.DB, err error) {
 	dbName := os.Getenv("DB_NAME")
 	dbPort := os.Getenv("DB_PORT")
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Copenhagen", dbHost, dbUser, dbPass, dbName, dbPort)
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	config := gorm.Config{}
+	if os.Getenv("GIN_MODE") == "release" {
+		config.Logger = logger.Default.LogMode(logger.Silent)
+	}
+	db, err = gorm.Open(postgres.Open(dsn), &config)
 	if err != nil {
 		return
 	}
@@ -79,16 +85,17 @@ type Post struct {
 //****
 
 const (
-	dbErrUniqueViolation = pq.ErrorCode("23505")
+	dbErrUniqueViolationCode = "23505"
 )
 
-func isErrorCode(err error, errcode pq.ErrorCode) bool {
-	if pgerr, ok := err.(*pq.Error); ok {
-		return pgerr.Code == errcode
+func isErrorCode(err error, errcode string) bool {
+	pgErr := err.(*pgconn.PgError)
+	if errors.Is(err, pgErr) {
+		return pgErr.Code == errcode
 	}
 	return false
 }
 
-func errIsDbUniqueViolation(err error) bool {
-	return isErrorCode(err, dbErrUniqueViolation)
+func errIsDBUniqueViolation(err error) bool {
+	return isErrorCode(err, dbErrUniqueViolationCode)
 }
