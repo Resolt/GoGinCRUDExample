@@ -64,12 +64,18 @@ func (s *server) handleUserCreate() gin.HandlerFunc {
 		name := c.Param("name")
 		user := User{}
 		result := s.db.Where("name = ?", name).Find(&user)
-		if result.RowsAffected > 0 {
-			c.JSON(
-				http.StatusConflict,
-				gin.H{"detail": fmt.Sprintf("user already exists: %s", name)},
-			)
-			return
+		if err := result.Error; err != nil {
+			if result.RowsAffected > 0 {
+				c.JSON(
+					http.StatusConflict,
+					gin.H{"detail": fmt.Sprintf("user already exists: %s", name)},
+				)
+				return
+			} else {
+				logError(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 		}
 		user.Name = name
 		result = s.db.Create(&user)
@@ -89,12 +95,18 @@ func (s *server) handleUserDelete() gin.HandlerFunc {
 		name := c.Param("name")
 		user := User{}
 		result := s.db.Where("name = ?", name).Find(&user)
-		if result.RowsAffected == 0 {
-			c.AbortWithStatusJSON(
-				http.StatusNotFound,
-				gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
-			)
-			return
+		if err := result.Error; err != nil {
+			if result.RowsAffected == 0 {
+				c.AbortWithStatusJSON(
+					http.StatusNotFound,
+					gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
+				)
+				return
+			} else {
+				logError(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 		}
 		result = s.db.Delete(&user)
 		if err := result.Error; err != nil {
@@ -118,19 +130,25 @@ func (s *server) handleUserPostsGet() gin.HandlerFunc {
 	}
 	return func(c *gin.Context) {
 		name := c.Param("name")
-		usr := User{}
-		result := s.db.Where("name = ?", name).Find(&usr)
-		if result.RowsAffected == 0 {
-			c.AbortWithStatusJSON(
-				http.StatusNotFound,
-				gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
-			)
-			return
+		user := User{}
+		result := s.db.Where("name = ?", name).Find(&user)
+		if err := result.Error; err != nil {
+			if result.RowsAffected == 0 {
+				c.AbortWithStatusJSON(
+					http.StatusNotFound,
+					gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
+				)
+				return
+			} else {
+				logError(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 		}
 		posts := []Post{}
-		result = s.db.Where("user_id = ?", usr.ID).Find(&posts)
-		err := result.Error
-		if err != nil && result.RowsAffected != 0 {
+		result = s.db.Where("user_id = ?", user.ID).Find(&posts)
+		if err := result.Error; err != nil && result.RowsAffected != 0 {
+			logError(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -160,26 +178,32 @@ func (s *server) handleUserPostCreate() gin.HandlerFunc {
 			return
 		}
 		name := c.Param("name")
-		usr := User{}
-		result := s.db.Where("name = ?", name).Find(&usr)
-		if result.RowsAffected == 0 {
-			c.AbortWithStatusJSON(
-				http.StatusNotFound,
-				gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
-			)
-			return
+		user := User{}
+		result := s.db.Where("name = ?", name).Find(&user)
+		if err = result.Error; err != nil {
+			if result.RowsAffected == 0 {
+				c.AbortWithStatusJSON(
+					http.StatusNotFound,
+					gin.H{"detail": fmt.Sprintf("user does not exists: %s", name)},
+				)
+				return
+			} else {
+				logError(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 		}
 		title := c.Param("title")
 		post := Post{}
-		result = s.db.Where("user_id = ? and title = ?", usr.ID, title).Find(&post)
+		result = s.db.Where("user_id = ? and title = ?", user.ID, title).Find(&post)
 		if result.RowsAffected > 0 {
 			c.AbortWithStatusJSON(http.StatusConflict, gin.H{
 				"detail": "user already has post with this title",
 			})
 			return
 		}
-		post.UserID = usr.ID
-		post.User = usr
+		post.UserID = user.ID
+		post.User = user
 		post.Title = title
 		post.Text = req.Text
 		err = s.db.Create(&post).Error
@@ -209,17 +233,18 @@ func (s *server) handleUserPostDelete() gin.HandlerFunc {
 		title := c.Param("title")
 		post := Post{}
 		result = s.db.Where("user_id = ? and title = ?", usr.ID, title).Find(&post)
-		if result.RowsAffected == 0 {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"detail": "post not found"})
-			return
-		} else if result.Error != nil {
-			logError(result.Error)
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
+		if err := result.Error; err != nil {
+			if result.RowsAffected == 0 {
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"detail": "post not found"})
+				return
+			} else {
+				logError(err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 		}
 		result = s.db.Delete(&post)
-		err := result.Error
-		if err != nil {
+		if err := result.Error; err != nil {
 			logError(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
