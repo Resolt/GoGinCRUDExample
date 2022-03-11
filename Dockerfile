@@ -1,9 +1,9 @@
 FROM golang:1.17-alpine AS build
-ADD ./ /build
-WORKDIR /build
+ADD ./ /app
+WORKDIR /app
 RUN go build -o ggce
 
 FROM alpine
-WORKDIR /ggce
-COPY --from=build /build/ggce .
+WORKDIR /app
+COPY --from=build /app/ggce .
 CMD ["./ggce"]
