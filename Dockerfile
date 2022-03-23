@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine AS build
+FROM golang:1.18-alpine AS build
 ADD ./ /app
 WORKDIR /app
 RUN go build -o ggce
