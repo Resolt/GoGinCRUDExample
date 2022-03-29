@@ -34,6 +34,7 @@ func getTaskhandler() (th *taskhandler, err error) {
 	if err != nil {
 		return
 	}
+	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
 		exchange,
