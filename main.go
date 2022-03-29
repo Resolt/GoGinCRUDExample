@@ -1,5 +1,7 @@
 package main
 
+import "github.com/gin-gonic/gin"
+
 func main() {
 	var err error
 
@@ -15,8 +17,18 @@ func main() {
 		logFatal(err)
 	}
 
+	//connect amqp
+	th, err := getTaskhandler()
+	if err != nil {
+		logFatal(err)
+	}
+
 	//create server and setup routes
-	srv := createServer(db)
+	srv := &server{
+		db:  db,
+		gin: gin.Default(),
+		th:  th,
+	}
 	srv.setupRoutes()
 
 	//run server and log error if something goes wrong

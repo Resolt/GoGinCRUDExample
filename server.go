@@ -11,14 +11,7 @@ import (
 type server struct {
 	db  *gorm.DB
 	gin *gin.Engine
-}
-
-func createServer(db *gorm.DB) (s *server) {
-	s = &server{
-		db:  db,
-		gin: gin.Default(),
-	}
-	return
+	th  *taskhandler
 }
 
 //Setup the routes of the API
@@ -29,6 +22,7 @@ func (s *server) setupRoutes() {
 	s.gin.GET("/users/:name/posts", s.handleUserPostsGet())
 	s.gin.POST("/users/:name/posts/:title", s.handleUserPostCreate())
 	s.gin.DELETE("/users/:name/posts/:title", s.handleUserPostDelete())
+	s.gin.POST("/tasks/print", s.handlerTaskPrint())
 }
 
 //Get users endpoint
@@ -248,6 +242,31 @@ func (s *server) handleUserPostDelete() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"detail": "OK"})
+		return
+	}
+}
+
+func (s *server) handlerTaskPrint() gin.HandlerFunc {
+	type request struct {
+		Task string `json:"task" binding:"required"`
+	}
+
+	return func(c *gin.Context) {
+		r := request{}
+		err := c.ShouldBindJSON(&r)
+		if err != nil {
+			logError(err)
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		err = s.th.sendTask(s.th.queueName, r.Task)
+		if err != nil {
+			logError(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		c.Status(http.StatusOK)
 		return
 	}
 }
