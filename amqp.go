@@ -20,7 +20,7 @@ func getTaskhandler() (th *taskhandler, err error) {
 	pass := os.Getenv("AMQP_PASS")
 	port := os.Getenv("AMQP_PORT")
 	vhost := os.Getenv("AMQP_VHOST")
-	exchange := os.Getenv("AMQP_EXHANGE")
+	exchange := os.Getenv("AMQP_EXCHANGE")
 	queue := os.Getenv("AMQP_QUEUE")
 
 	uri := fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, vhost)
@@ -79,8 +79,8 @@ func (t *taskhandler) sendTask(routingKey string, body string) (err error) {
 	err = ch.Publish(
 		t.exchangeName,
 		routingKey,
-		false,
-		false,
+		true,
+		true,
 		amqp.Publishing{
 			Headers:         amqp.Table{},
 			ContentType:     "text/plain",

@@ -22,7 +22,7 @@ func (s *server) setupRoutes() {
 	s.gin.GET("/users/:name/posts", s.handleUserPostsGet())
 	s.gin.POST("/users/:name/posts/:title", s.handleUserPostCreate())
 	s.gin.DELETE("/users/:name/posts/:title", s.handleUserPostDelete())
-	s.gin.POST("/tasks/print", s.handlerTaskPrint())
+	s.gin.POST("/tasks/print", s.handleTaskPrint())
 }
 
 //Get users endpoint
@@ -246,7 +246,7 @@ func (s *server) handleUserPostDelete() gin.HandlerFunc {
 	}
 }
 
-func (s *server) handlerTaskPrint() gin.HandlerFunc {
+func (s *server) handleTaskPrint() gin.HandlerFunc {
 	type request struct {
 		Task string `json:"task" binding:"required"`
 	}
