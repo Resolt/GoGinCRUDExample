@@ -75,6 +75,7 @@ func (t *taskhandler) sendTask(routingKey string, body string) (err error) {
 	if err != nil {
 		return
 	}
+	defer ch.Close()
 
 	err = ch.Publish(
 		t.exchangeName,
