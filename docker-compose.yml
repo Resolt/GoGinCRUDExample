@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.2'
 
 services:
   db:
@@ -11,19 +11,10 @@ services:
       POSTGRES_DB: "ggce"
     ports:
       - 5432:5432
-  # api:
-  #   container_name: ggce-api
-  #   build: .
-  #   restart: unless-stopped
-  #   environment:
-  #     DB_HOST: "database"
-  #     DB_NAME: "ggce"
-  #     DB_USER: "ggce"
-  #     DB_PASS: "ggce"
-  #     DB_PORT: "5432"
-  #     GIN_MODE: "release"
-  #     PORT: "8080"
-  #   ports:
-  #     - 8080:8080
-  #   links:
-  #     - "db:database"
+  rmq:
+    container_name: ggce-rmq
+    image: rabbitmq:3-management-alpine
+    restart: unless-stopped
+    ports:
+      - 5672:5672
+      - 15672:15672

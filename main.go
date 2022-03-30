@@ -25,14 +25,14 @@ func main() {
 
 	//create server and setup routes
 	srv := &server{
-		db:  db,
-		gin: gin.Default(),
-		th:  th,
+		db: db,
+		ge: gin.Default(),
+		th: th,
 	}
 	srv.setupRoutes()
 
 	//run server and log error if something goes wrong
-	err = srv.gin.Run()
+	err = srv.ge.Run()
 	if err != nil {
 		logFatal(err)
 	}

@@ -15,29 +15,33 @@ type taskhandler struct {
 }
 
 func getTaskhandler() (th *taskhandler, err error) {
+
 	host := os.Getenv("AMQP_HOST")
 	user := os.Getenv("AMQP_USER")
 	pass := os.Getenv("AMQP_PASS")
 	port := os.Getenv("AMQP_PORT")
 	vhost := os.Getenv("AMQP_VHOST")
-	exchange := os.Getenv("AMQP_EXCHANGE")
-	queue := os.Getenv("AMQP_QUEUE")
 
-	uri := fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, vhost)
+	th = &taskhandler{}
 
-	ac, err := amqp.Dial(uri)
+	th.exchangeName = os.Getenv("AMQP_EXCHANGE")
+	th.queueName = os.Getenv("AMQP_QUEUE")
+
+	th.uri = fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, vhost)
+
+	th.ac, err = amqp.Dial(th.uri)
 	if err != nil {
 		return
 	}
 
-	ch, err := ac.Channel()
+	ch, err := th.ac.Channel()
 	if err != nil {
 		return
 	}
-	defer ch.Close()
+	defer func() { err = ch.Close() }()
 
 	err = ch.ExchangeDeclare(
-		exchange,
+		th.exchangeName,
 		"direct",
 		true,
 		false,
@@ -49,8 +53,18 @@ func getTaskhandler() (th *taskhandler, err error) {
 		return
 	}
 
+	return
+}
+
+func (th *taskhandler) sendTask(routingKey string, body string) (err error) {
+	ch, err := th.ac.Channel()
+	if err != nil {
+		return
+	}
+	defer func() { err = ch.Close() }()
+
 	_, err = ch.QueueDeclare(
-		queue,
+		routingKey,
 		true,
 		false,
 		false,
@@ -61,28 +75,11 @@ func getTaskhandler() (th *taskhandler, err error) {
 		return
 	}
 
-	th = &taskhandler{
-		ac:           ac,
-		queueName:    queue,
-		exchangeName: exchange,
-		uri:          uri,
-	}
-
-	return
-}
-
-func (t *taskhandler) sendTask(routingKey string, body string) (err error) {
-	ch, err := t.ac.Channel()
-	if err != nil {
-		return
-	}
-	defer ch.Close()
-
 	err = ch.Publish(
-		t.exchangeName,
+		"",
 		routingKey,
 		true,
-		true,
+		false,
 		amqp.Publishing{
 			Headers:         amqp.Table{},
 			ContentType:     "text/plain",
