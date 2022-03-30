@@ -22,12 +22,11 @@ func getTaskhandler() (th *taskhandler, err error) {
 	port := os.Getenv("AMQP_PORT")
 	vhost := os.Getenv("AMQP_VHOST")
 
-	th = &taskhandler{}
-
-	th.exchangeName = os.Getenv("AMQP_EXCHANGE")
-	th.queueName = os.Getenv("AMQP_QUEUE")
-
-	th.uri = fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, vhost)
+	th = &taskhandler{
+		exchangeName: os.Getenv("AMQP_EXCHANGE"),
+		queueName:    os.Getenv("AMQP_QUEUE"),
+		uri:          fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, vhost),
+	}
 
 	th.ac, err = amqp.Dial(th.uri)
 	if err != nil {
