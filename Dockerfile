@@ -4,7 +4,10 @@ WORKDIR /app
 RUN apk add git
 RUN go build -o ggce
 
-FROM alpine
+FROM alpine:latest AS final
+ARG USER=nonroot
+RUN adduser -D $USER
+USER $USER
 WORKDIR /app
-COPY --from=build /app/ggce .
+COPY --from=build --chown=$USER:$USER /app/ggce .
 CMD ["./ggce"]
