@@ -5,13 +5,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type server struct {
-	db *gorm.DB
-	ge *gin.Engine
-	th *taskhandler
+	db  *gorm.DB
+	ge  *gin.Engine
+	th  *taskhandler
+	log *logrus.Logger
 }
 
 //Setup the routes of the API
@@ -35,7 +37,7 @@ func (s *server) handleUsersGet() gin.HandlerFunc {
 		users := []User{}
 		err := s.db.Find(&users).Error
 		if err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -66,7 +68,7 @@ func (s *server) handleUserCreate() gin.HandlerFunc {
 				)
 				return
 			} else {
-				logError(err)
+				s.log.Error(err)
 				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
@@ -83,7 +85,7 @@ func (s *server) handleUserDelete() gin.HandlerFunc {
 		user := User{}
 		result := s.db.Where("name = ?", name).Find(&user)
 		if err := result.Error; err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -96,7 +98,7 @@ func (s *server) handleUserDelete() gin.HandlerFunc {
 		}
 		result = s.db.Delete(&user)
 		if err := result.Error; err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -119,7 +121,7 @@ func (s *server) handleUserPostsGet() gin.HandlerFunc {
 		user := User{}
 		result := s.db.Where("name = ?", name).Find(&user)
 		if err := result.Error; err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -133,7 +135,7 @@ func (s *server) handleUserPostsGet() gin.HandlerFunc {
 		posts := []Post{}
 		result = s.db.Where("user_id = ?", user.ID).Find(&posts)
 		if err := result.Error; err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -166,7 +168,7 @@ func (s *server) handleUserPostCreate() gin.HandlerFunc {
 		user := User{}
 		result := s.db.Where("name = ?", name).Find(&user)
 		if err = result.Error; err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -192,7 +194,7 @@ func (s *server) handleUserPostCreate() gin.HandlerFunc {
 				})
 				return
 			} else {
-				logError(err)
+				s.log.Error(err)
 				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
@@ -209,7 +211,7 @@ func (s *server) handleUserPostDelete() gin.HandlerFunc {
 		usr := User{}
 		result := s.db.Where("name = ?", name).Find(&usr)
 		if err := result.Error; err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -224,7 +226,7 @@ func (s *server) handleUserPostDelete() gin.HandlerFunc {
 		post := Post{}
 		result = s.db.Where("user_id = ? and title = ?", usr.ID, title).Find(&post)
 		if err := result.Error; err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -237,7 +239,7 @@ func (s *server) handleUserPostDelete() gin.HandlerFunc {
 		}
 		result = s.db.Delete(&post)
 		if err := result.Error; err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -255,13 +257,14 @@ func (s *server) handleTaskPrint() gin.HandlerFunc {
 		r := request{}
 		err := c.ShouldBindJSON(&r)
 		if err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
+
 		err = s.th.sendTask(s.th.queueName, r.Task)
 		if err != nil {
-			logError(err)
+			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}

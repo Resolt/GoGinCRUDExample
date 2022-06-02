@@ -55,7 +55,7 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-//Gorm hook for deleting posts of user before deleting user
+//BeforeDelete Gorm hook for deleting posts of user before deleting user
 func (u *User) BeforeDelete(tx *gorm.DB) (err error) {
 	posts := []Post{}
 	result := tx.Where("user_id = ?", u.ID).Find(&posts)
