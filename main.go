@@ -9,42 +9,43 @@ import (
 func main() {
 	var err error
 
-	log := logrus.StandardLogger()
+	lr := logrus.StandardLogger()
+	lr.SetFormatter(&logrus.JSONFormatter{})
 
 	//create db connection
 	db, err := getDB()
 	if err != nil {
-		log.Fatal(err)
+		lr.Fatal(err)
 	}
 
 	//migrate db
 	err = migrate(db)
 	if err != nil {
-		log.Fatal(err)
+		lr.Fatal(err)
 	}
 
 	//connect amqp
 	th, err := getTaskhandler()
 	if err != nil {
-		log.Fatal(err)
+		lr.Fatal(err)
 	}
 
 	r := gin.New()
-	r.Use(ginlogrus.Logger(log), gin.Recovery())
+	r.Use(ginlogrus.Logger(lr), gin.Recovery())
 
 	//create server and setup routes
 	srv := &server{
 		db:  db,
 		ge:  r,
 		th:  th,
-		log: log,
+		log: lr,
 	}
 	srv.setupRoutes()
 
 	//run server and log error if something goes wrong
 	err = srv.ge.Run()
 	if err != nil {
-		log.Fatal(err)
+		lr.Fatal(err)
 	}
 	return
 }

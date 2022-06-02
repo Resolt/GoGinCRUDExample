@@ -66,12 +66,11 @@ func (s *server) handleUserCreate() gin.HandlerFunc {
 					http.StatusConflict,
 					gin.H{"detail": fmt.Sprintf("user already exists: %s", name)},
 				)
-				return
 			} else {
 				s.log.Error(err)
 				c.AbortWithStatus(http.StatusInternalServerError)
-				return
 			}
+			return
 		}
 		c.JSON(http.StatusOK, response{UserID: user.ID})
 		return
@@ -192,12 +191,11 @@ func (s *server) handleUserPostCreate() gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusConflict, gin.H{
 					"detail": "user already has post with this title",
 				})
-				return
 			} else {
 				s.log.Error(err)
 				c.AbortWithStatus(http.StatusInternalServerError)
-				return
 			}
+			return
 		}
 		c.JSON(http.StatusOK, gin.H{"detail": "OK"})
 		return
