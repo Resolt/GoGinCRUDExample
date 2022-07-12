@@ -36,14 +36,14 @@ func main() {
 	//create server and setup routes
 	srv := &server{
 		db:  db,
-		ge:  r,
+		r:   r,
 		th:  th,
 		log: lr,
 	}
 	srv.setupRoutes()
 
-	//run server and log error if something goes wrong
-	err = srv.ge.Run()
+	//run server and log error
+	err = srv.r.Run()
 	if err != nil {
 		lr.Fatal(err)
 	}

@@ -11,20 +11,20 @@ import (
 
 type server struct {
 	db  *gorm.DB
-	ge  *gin.Engine
+	r  *gin.Engine
 	th  *taskhandler
 	log *logrus.Logger
 }
 
 //Setup the routes of the API
 func (s *server) setupRoutes() {
-	s.ge.GET("/users", s.handleUsersGet())
-	s.ge.POST("/users/:name", s.handleUserCreate())
-	s.ge.DELETE("/users/:name", s.handleUserDelete())
-	s.ge.GET("/users/:name/posts", s.handleUserPostsGet())
-	s.ge.POST("/users/:name/posts/:title", s.handleUserPostCreate())
-	s.ge.DELETE("/users/:name/posts/:title", s.handleUserPostDelete())
-	s.ge.POST("/tasks/print", s.handleTaskPrint())
+	s.r.GET("/users", s.handleUsersGet())
+	s.r.POST("/users/:name", s.handleUserCreate())
+	s.r.DELETE("/users/:name", s.handleUserDelete())
+	s.r.GET("/users/:name/posts", s.handleUserPostsGet())
+	s.r.POST("/users/:name/posts/:title", s.handleUserPostCreate())
+	s.r.DELETE("/users/:name/posts/:title", s.handleUserPostDelete())
+	s.r.POST("/tasks/print", s.handleTaskPrint())
 }
 
 //Get users endpoint
