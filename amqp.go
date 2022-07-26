@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -58,7 +59,18 @@ func getTaskhandler() (th *taskhandler, err error) {
 func (th *taskhandler) sendTask(routingKey string, body string) (err error) {
 	ch, err := th.ac.Channel()
 	if err != nil {
-		return
+		if errors.Is(err, amqp.ErrClosed) {
+			th, err = getTaskhandler()
+			if err != nil {
+				return
+			}
+			ch, err = th.ac.Channel()
+			if err != nil {
+				return
+			}
+		} else {
+			return
+		}
 	}
 	defer func() { err = ch.Close() }()
 
