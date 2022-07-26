@@ -5,8 +5,8 @@ go 1.17
 require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/jackc/pgconn v1.10.1
+	github.com/rabbitmq/amqp091-go v1.4.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/streadway/amqp v1.0.0
 	github.com/toorop/gin-logrus v0.0.0-20210225092905-2c785434f26f
 	gorm.io/driver/postgres v1.2.3
 	gorm.io/gorm v1.22.5
