@@ -260,7 +260,7 @@ func (s *server) handleTaskPrint() gin.HandlerFunc {
 			return
 		}
 
-		err = s.th.sendTask(s.th.queueName, r.Task, s.log)
+		err = s.th.sendTask(s.th.queueName, r.Task)
 		if err != nil {
 			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)

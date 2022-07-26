@@ -25,7 +25,7 @@ func main() {
 	}
 
 	//connect amqp
-	th, err := getTaskhandler()
+	th, err := getTaskhandler(lr)
 	if err != nil {
 		lr.Fatal(err)
 	}

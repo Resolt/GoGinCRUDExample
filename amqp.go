@@ -14,9 +14,10 @@ type taskhandler struct {
 	queueName    string
 	exchangeName string
 	uri          string
+	log          *logrus.Logger
 }
 
-func getTaskhandler() (th *taskhandler, err error) {
+func getTaskhandler(log *logrus.Logger) (th *taskhandler, err error) {
 
 	host := os.Getenv("AMQP_HOST")
 	user := os.Getenv("AMQP_USER")
@@ -29,6 +30,7 @@ func getTaskhandler() (th *taskhandler, err error) {
 		exchangeName: os.Getenv("AMQP_EXCHANGE"),
 		queueName:    os.Getenv("AMQP_QUEUE"),
 		uri:          fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, vhost),
+		log:          log,
 	}
 
 	// Dial AMQP server
@@ -57,16 +59,18 @@ func getTaskhandler() (th *taskhandler, err error) {
 	if err != nil {
 		return
 	}
-
 	return
 }
 
-func (th *taskhandler) sendTask(routingKey string, body string, log *logrus.Logger) (err error) {
+func (th *taskhandler) getChannel(redial bool) (ch *amqp.Channel, err error) {
 	// Create channel with a single redial attempt
-	ch, err := th.ac.Channel()
+	ch, err = th.ac.Channel()
 	if err != nil {
 		if errors.Is(err, amqp.ErrClosed) {
-			log.Warn("Connection to AMQP server lost")
+			th.log.Error("Connection to AMQP server lost")
+			if !redial {
+				return
+			}
 			th.ac, err = amqp.Dial(th.uri)
 			if err != nil {
 				return
@@ -75,11 +79,16 @@ func (th *taskhandler) sendTask(routingKey string, body string, log *logrus.Logg
 			if err != nil {
 				return
 			}
-			log.Info("Succesfully reconnected to AMQP server")
+			th.log.Info("Succesfully reconnected to AMQP server")
 		} else {
 			return
 		}
 	}
+	return
+}
+
+func (th *taskhandler) sendTask(routingKey string, body string) (err error) {
+	ch, err := th.getChannel(true)
 	defer func() { err = ch.Close() }()
 
 	// Declare queue
