@@ -23,23 +23,27 @@ func getTaskhandler() (th *taskhandler, err error) {
 	port := os.Getenv("AMQP_PORT")
 	vhost := os.Getenv("AMQP_VHOST")
 
+	// Create taskhandler
 	th = &taskhandler{
 		exchangeName: os.Getenv("AMQP_EXCHANGE"),
 		queueName:    os.Getenv("AMQP_QUEUE"),
 		uri:          fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, vhost),
 	}
 
+	// Dial AMQP server
 	th.ac, err = amqp.Dial(th.uri)
 	if err != nil {
 		return
 	}
 
+	// Ensure a channel can be created
 	ch, err := th.ac.Channel()
 	if err != nil {
 		return
 	}
 	defer func() { err = ch.Close() }()
 
+	// Declare exchange
 	err = ch.ExchangeDeclare(
 		th.exchangeName,
 		"direct",
@@ -57,10 +61,11 @@ func getTaskhandler() (th *taskhandler, err error) {
 }
 
 func (th *taskhandler) sendTask(routingKey string, body string) (err error) {
+	// Create channel with a single redial attempt
 	ch, err := th.ac.Channel()
 	if err != nil {
 		if errors.Is(err, amqp.ErrClosed) {
-			th, err = getTaskhandler()
+			th.ac, err = amqp.Dial(th.uri)
 			if err != nil {
 				return
 			}
@@ -74,6 +79,7 @@ func (th *taskhandler) sendTask(routingKey string, body string) (err error) {
 	}
 	defer func() { err = ch.Close() }()
 
+	// Declare queue
 	_, err = ch.QueueDeclare(
 		routingKey,
 		true,
@@ -86,6 +92,7 @@ func (th *taskhandler) sendTask(routingKey string, body string) (err error) {
 		return
 	}
 
+	// Send task
 	err = ch.Publish(
 		"",
 		routingKey,
