@@ -6,6 +6,7 @@ import (
 	"os"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/sirupsen/logrus"
 )
 
 type taskhandler struct {
@@ -60,11 +61,12 @@ func getTaskhandler() (th *taskhandler, err error) {
 	return
 }
 
-func (th *taskhandler) sendTask(routingKey string, body string) (err error) {
+func (th *taskhandler) sendTask(routingKey string, body string, log *logrus.Logger) (err error) {
 	// Create channel with a single redial attempt
 	ch, err := th.ac.Channel()
 	if err != nil {
 		if errors.Is(err, amqp.ErrClosed) {
+			log.Warn("Connection to AMQP server lost")
 			th.ac, err = amqp.Dial(th.uri)
 			if err != nil {
 				return
@@ -73,6 +75,7 @@ func (th *taskhandler) sendTask(routingKey string, body string) (err error) {
 			if err != nil {
 				return
 			}
+			log.Info("Succesfully reconnected to AMQP server")
 		} else {
 			return
 		}

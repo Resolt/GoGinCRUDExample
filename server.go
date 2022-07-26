@@ -11,7 +11,7 @@ import (
 
 type server struct {
 	db  *gorm.DB
-	r  *gin.Engine
+	r   *gin.Engine
 	th  *taskhandler
 	log *logrus.Logger
 }
@@ -260,7 +260,7 @@ func (s *server) handleTaskPrint() gin.HandlerFunc {
 			return
 		}
 
-		err = s.th.sendTask(s.th.queueName, r.Task)
+		err = s.th.sendTask(s.th.queueName, r.Task, s.log)
 		if err != nil {
 			s.log.Error(err)
 			c.AbortWithStatus(http.StatusInternalServerError)
