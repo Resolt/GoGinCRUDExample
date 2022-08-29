@@ -16,7 +16,7 @@ type server struct {
 	log *logrus.Logger
 }
 
-//Setup the routes of the API
+// Setup the routes of the API
 func (s *server) setupRoutes() {
 	s.r.GET("/users", s.handleUsersGet())
 	s.r.POST("/users/:name", s.handleUserCreate())
@@ -27,7 +27,7 @@ func (s *server) setupRoutes() {
 	s.r.POST("/tasks/print", s.handleTaskPrint())
 }
 
-//Get users endpoint
+// Get users endpoint
 func (s *server) handleUsersGet() gin.HandlerFunc {
 	type response struct {
 		Users []string `json:"users"`
@@ -50,7 +50,7 @@ func (s *server) handleUsersGet() gin.HandlerFunc {
 	}
 }
 
-//Create user endpoint
+// Create user endpoint
 func (s *server) handleUserCreate() gin.HandlerFunc {
 	type response struct {
 		UserID uint `json:"user_id"`
@@ -77,7 +77,7 @@ func (s *server) handleUserCreate() gin.HandlerFunc {
 	}
 }
 
-//Delete user endpoint
+// Delete user endpoint
 func (s *server) handleUserDelete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		name := c.Param("name")
@@ -106,7 +106,7 @@ func (s *server) handleUserDelete() gin.HandlerFunc {
 	}
 }
 
-//Get posts of user endpoint
+// Get posts of user endpoint
 func (s *server) handleUserPostsGet() gin.HandlerFunc {
 	type postResponse struct {
 		Title string `json:"title" binding:"required"`
@@ -149,7 +149,7 @@ func (s *server) handleUserPostsGet() gin.HandlerFunc {
 	}
 }
 
-//Create post for user endpoint
+// Create post for user endpoint
 func (s *server) handleUserPostCreate() gin.HandlerFunc {
 	type request struct {
 		Text string `json:"text" binding:"required"`
@@ -202,7 +202,7 @@ func (s *server) handleUserPostCreate() gin.HandlerFunc {
 	}
 }
 
-//Delete post endpoint
+// Delete post endpoint
 func (s *server) handleUserPostDelete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		name := c.Param("name")
